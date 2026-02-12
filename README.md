@@ -1,115 +1,218 @@
-Got it. Below is **one continuous `README.md` file** with **no extra section breaks**, clean flow, and fully valid Markdown. You can paste this directly as is.
+# Real-Time Collaborative Task Management Platform
 
-```md
-# Real Time Task Management System
+A Trello/Asana-like collaborative task management system where multiple users can create, assign, and track tasks in real-time with live updates across all connected clients.
 
-A backend focused real time task management application designed to handle task creation, assignment, updates, and live status changes. This project demonstrates how modern backend systems support real time collaboration using event driven communication. The system is built with scalability, clean architecture, and real world backend practices in mind.
+## Features
 
-## Project Overview
-
-The application allows users to manage tasks efficiently while receiving real time updates whenever tasks are created, updated, or completed. Real time communication removes the need for frequent polling and improves system responsiveness.
-
-## Core Features
-
-- Create, update, and delete tasks  
-- Assign tasks to users  
-- Track task status changes in real time  
-- Live updates using WebSocket  
-- Clean and modular backend design  
-
-## Architecture
-
-The project follows a layered backend architecture with real time communication support. REST APIs are used for task management operations, while WebSocket enables instant task update broadcasts. The architecture follows controller, service, and repository separation and is structured to scale with future requirements.
+- **Real-time Collaboration** - Tasks update instantly across all connected clients via WebSocket
+- **Kanban Board** - Drag-and-drop task management with customizable columns
+- **Project Management** - Create projects, invite team members, assign roles
+- **Task Management** - Create, assign, prioritize, and track tasks
+- **User Presence** - See who's online and working on the same project
+- **Comments** - Discuss tasks with real-time comment updates
+- **Activity Log** - Track all changes and actions
+- **Redis Caching** - Fast data access with intelligent cache invalidation
 
 ## Tech Stack
 
-- Java  
-- Spring Boot  
-- Spring WebSocket  
-- REST APIs  
-- Maven  
-- MySQL or PostgreSQL  
-- Docker  
+### Backend
+- Java 17
+- Spring Boot 3.2
+- Spring Security with JWT
+- Spring WebSocket (STOMP over SockJS)
+- Spring Data JPA
+- PostgreSQL
+- Redis
+
+### Frontend
+- React 18
+- Vite
+- Redux Toolkit
+- Material-UI
+- @hello-pangea/dnd (drag-and-drop)
+- STOMP.js / SockJS
+
+## Quick Start with Docker
+
+### Prerequisites
+- Docker and Docker Compose installed
+
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/real-time-task-management.git
+   cd real-time-task-management
+   ```
+
+2. **Create environment file**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start all services**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8080
+   - API Documentation: http://localhost:8080/swagger-ui.html (if enabled)
+
+### Stop services
+```bash
+docker-compose down
+```
+
+### View logs
+```bash
+docker-compose logs -f
+```
+
+## Local Development
+
+### Backend
+
+1. **Prerequisites**
+   - Java 17+
+   - Maven 3.9+
+   - PostgreSQL 15+
+   - Redis 7+
+
+2. **Configure database**
+   ```bash
+   # Create PostgreSQL database
+   createdb taskmanagement
+   ```
+
+3. **Run backend**
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
+
+### Frontend
+
+1. **Prerequisites**
+   - Node.js 18+
+   - npm 9+
+
+2. **Install dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Access** http://localhost:5173
+
+## API Endpoints
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/auth/register | Register new user |
+| POST | /api/auth/login | Login |
+| POST | /api/auth/refresh | Refresh token |
+| GET | /api/auth/me | Get current user |
+
+### Projects
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/projects | Get user's projects |
+| POST | /api/projects | Create project |
+| GET | /api/projects/:id | Get project details |
+| PUT | /api/projects/:id | Update project |
+| DELETE | /api/projects/:id | Delete project |
+| GET | /api/projects/:id/members | Get project members |
+| POST | /api/projects/:id/members | Add member |
+| DELETE | /api/projects/:id/members/:userId | Remove member |
+
+### Tasks
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/projects/:id/tasks | Get project tasks |
+| POST | /api/projects/:id/tasks | Create task |
+| GET | /api/tasks/:id | Get task details |
+| PUT | /api/tasks/:id | Update task |
+| DELETE | /api/tasks/:id | Delete task |
+| PATCH | /api/tasks/:id/status | Update task status |
+| PATCH | /api/tasks/:id/assign | Assign task |
+
+### Comments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/tasks/:id/comments | Get task comments |
+| POST | /api/tasks/:id/comments | Add comment |
+| DELETE | /api/tasks/:id/comments/:commentId | Delete comment |
+
+## WebSocket Events
+
+Connect to `/ws` endpoint with STOMP over SockJS.
+
+### Topics
+- `/topic/project/{projectId}` - Project and task updates
+- `/topic/project/{projectId}/presence` - User presence updates
+
+### Event Types
+- `TASK_CREATED`, `TASK_UPDATED`, `TASK_DELETED`
+- `TASK_STATUS_CHANGED`, `TASK_ASSIGNED`
+- `COMMENT_ADDED`, `COMMENT_DELETED`
+- `PROJECT_UPDATED`, `PROJECT_DELETED`
+- `MEMBER_ADDED`, `MEMBER_REMOVED`
+- `USER_JOINED`, `USER_LEFT`
 
 ## Project Structure
 
 ```
-
-real-time-task-management-system/
-│
-├── controller/
-├── service/
-├── repository/
-├── model/
-├── websocket/
-│
-├── application.yml
-├── pom.xml
+real-time-task-management/
+├── backend/
+│   ├── src/main/java/com/taskmanagement/
+│   │   ├── config/          # Spring configuration
+│   │   ├── controller/      # REST controllers
+│   │   ├── dto/             # Data transfer objects
+│   │   ├── entity/          # JPA entities
+│   │   ├── enums/           # Enumerations
+│   │   ├── exception/       # Exception handling
+│   │   ├── repository/      # JPA repositories
+│   │   ├── security/        # Security configuration
+│   │   └── service/         # Business logic
+│   ├── Dockerfile
+│   └── pom.xml
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── contexts/        # React contexts
+│   │   ├── hooks/           # Custom hooks
+│   │   ├── pages/           # Page components
+│   │   ├── services/        # API services
+│   │   └── store/           # Redux store
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml
 └── README.md
-
 ```
 
-## Running the Project Locally
+## Environment Variables
 
-### Prerequisites
-
-- Java 17 or above  
-- Maven  
-- MySQL or PostgreSQL  
-- Docker optional  
-
-### Steps
-
-1. Clone the repository  
-```
-
-git clone [https://github.com/your-username/real-time-task-management-system.git](https://github.com/your-username/real-time-task-management-system.git)
-
-```
-
-2. Navigate to the project directory  
-```
-
-cd real-time-task-management-system
-
-```
-
-3. Build the project  
-```
-
-mvn clean install
-
-```
-
-4. Run the application  
-```
-
-mvn spring-boot:run
-
-```
-
-## API and Real Time Communication
-
-REST APIs expose endpoints for task creation, updates, and retrieval. A WebSocket endpoint broadcasts real time task updates to all connected clients, ensuring immediate synchronization across users without polling.
-
-## Key Highlights
-
-- Real time updates without polling  
-- Clean layered architecture  
-- Production style backend structure  
-- Easily extensible for authentication and authorization  
-- Designed with scalability in mind  
-
-## Future Enhancements
-
-- User authentication and authorization  
-- Role based access control  
-- Notification service integration  
-- Frontend integration using React or Angular  
+| Variable | Description | Default |
+|----------|-------------|---------|
+| DB_NAME | PostgreSQL database name | taskmanagement |
+| DB_USER | PostgreSQL username | postgres |
+| DB_PASSWORD | PostgreSQL password | password |
+| DB_PORT | PostgreSQL port | 5432 |
+| REDIS_PORT | Redis port | 6379 |
+| JWT_SECRET | JWT signing secret | (default dev secret) |
+| BACKEND_PORT | Backend server port | 8080 |
+| FRONTEND_PORT | Frontend server port | 3000 |
+| ALLOWED_ORIGINS | CORS allowed origins | http://localhost:3000 |
 
 ## License
 
-This project is licensed under the terms specified in the LICENSE file.
-```
-
-If you want, I can also compress this into a **single paragraph README** or make an **ultra short recruiter version**.
+MIT License - see LICENSE file for details.
