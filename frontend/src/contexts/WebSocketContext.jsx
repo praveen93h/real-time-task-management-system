@@ -58,10 +58,10 @@ export const WebSocketProvider = ({ children }) => {
   // Handle WebSocket messages
   const handleProjectMessage = useCallback(
     (message) => {
-      const { type, payload, userId } = message;
+      const { type, payload, projectId, entityId, triggeredBy } = message;
 
       // Skip messages from self (we already have optimistic updates)
-      if (userId === user?.id) {
+      if (triggeredBy === user?.username) {
         return;
       }
 
@@ -77,37 +77,37 @@ export const WebSocketProvider = ({ children }) => {
           dispatch(taskUpdated(payload));
           break;
         case 'TASK_DELETED':
-          dispatch(taskDeleted({ projectId: payload.projectId, taskId: payload.id }));
+          dispatch(taskDeleted({ projectId, taskId: entityId }));
           break;
         case 'COMMENT_ADDED':
           dispatch(commentAdded({ taskId: payload.taskId, comment: payload }));
           break;
         case 'COMMENT_DELETED':
-          dispatch(commentDeleted({ taskId: payload.taskId, commentId: payload.commentId }));
+          dispatch(commentDeleted({ taskId: entityId, commentId: payload }));
           break;
         case 'PROJECT_UPDATED':
           dispatch(projectUpdated(payload));
           break;
         case 'PROJECT_DELETED':
-          dispatch(projectDeleted(payload.id));
+          dispatch(projectDeleted(projectId));
           break;
         case 'MEMBER_ADDED':
-          dispatch(memberAdded({ projectId: payload.projectId, member: payload }));
+          dispatch(memberAdded({ projectId, member: payload }));
           break;
         case 'MEMBER_REMOVED':
-          dispatch(memberRemoved({ projectId: payload.projectId, userId: payload.userId }));
+          dispatch(memberRemoved({ projectId, userId: entityId }));
           break;
         default:
           console.log('Unknown WebSocket message type:', type);
       }
     },
-    [dispatch, user?.id]
+    [dispatch, user?.username]
   );
 
   // Handle presence messages
   const handlePresenceMessage = useCallback(
     (message) => {
-      const { type, userId, username, projectId, onlineUsers: users } = message;
+      const { type, userId, username, projectId, onlineUserIds } = message;
 
       if (type === 'USER_JOINED') {
         setOnlineUsers((prev) => ({
@@ -119,10 +119,10 @@ export const WebSocketProvider = ({ children }) => {
           ...prev,
           [projectId]: (prev[projectId] || []).filter((u) => u.userId !== userId),
         }));
-      } else if (type === 'ONLINE_USERS' && users) {
+      } else if (type === 'PRESENCE_UPDATE' && onlineUserIds) {
         setOnlineUsers((prev) => ({
           ...prev,
-          [projectId]: users,
+          [projectId]: onlineUserIds.map((id) => ({ userId: id })),
         }));
       }
     },
@@ -150,7 +150,7 @@ export const WebSocketProvider = ({ children }) => {
       websocketService.subscribe(`/topic/project/${projectId}/presence`, handlePresenceMessage);
 
       // Send join message
-      websocketService.send('/app/project.join', { projectId });
+      websocketService.send(`/app/project/${projectId}/join`, {});
     },
     [connected, handleProjectMessage, handlePresenceMessage]
   );
@@ -164,7 +164,7 @@ export const WebSocketProvider = ({ children }) => {
 
       // Send leave message
       if (websocketService.isConnected()) {
-        websocketService.send('/app/project.leave', { projectId });
+        websocketService.send(`/app/project/${projectId}/leave`, {});
       }
 
       // Unsubscribe from topics
